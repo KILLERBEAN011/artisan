@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* This line tells Tailwind v4 to trigger dark mode when the .dark class is active */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Brand palette, derived from the NaijaCraft prototype */
   --color-navy-950: #0a1530;

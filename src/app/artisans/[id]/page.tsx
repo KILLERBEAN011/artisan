@@ -18,7 +18,9 @@ export default async function ArtisanProfilePage({
 
   let profile;
   try {
-    profile = await ArtisanProfile.findById(id).populate("userId", "name").lean();
+    profile = await ArtisanProfile.findById(id)
+      .populate("userId", "name")
+      .lean();
   } catch {
     notFound();
   }
@@ -29,6 +31,7 @@ export default async function ArtisanProfilePage({
 
   const user = profile.userId as unknown as { name?: string } | null;
   const name = user?.name ?? "Artisan";
+  const isAvailable = profile.isAvailable ?? true;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -43,10 +46,16 @@ export default async function ArtisanProfilePage({
       <div className="rounded-2xl border border-cloud-200 bg-white p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-4">
-            <Avatar src={profile.avatarUrl} alt={`Portrait of ${name}`} size="md" />
+            <Avatar
+              src={profile.avatarUrl}
+              alt={`Portrait of ${name}`}
+              size="md"
+            />
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-xl font-bold text-navy-900">{name}</h1>
+                <h1 className="font-display text-xl font-bold text-navy-900">
+                  {name}
+                </h1>
                 {profile.verification.length > 0 && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-brand-green-100 px-2 py-0.5 text-xs font-semibold text-brand-green-700">
                     <ShieldCheck className="h-3 w-3" />
@@ -61,7 +70,8 @@ export default async function ArtisanProfilePage({
                   {profile.rating ? profile.rating.toFixed(1) : "New"}
                 </span>
                 <span className="text-ink-500">
-                  · {profile.reviewCount} review{profile.reviewCount === 1 ? "" : "s"}
+                  · {profile.reviewCount} review
+                  {profile.reviewCount === 1 ? "" : "s"}
                 </span>
                 <span className="flex items-center gap-1 text-ink-500">
                   <MapPin className="h-3.5 w-3.5" />
@@ -75,7 +85,21 @@ export default async function ArtisanProfilePage({
             <p className="font-display text-xl font-bold text-brand-green-600">
               From NGN {profile.fromPriceNaira.toLocaleString()}
             </p>
-            <RequestQuoteButton artisanId={id} serviceTitle={profile.serviceTitle} />
+
+            {/* Conditional Availability Rendering for Profile Page */}
+            {isAvailable ? (
+              <RequestQuoteButton
+                artisanId={id}
+                serviceTitle={profile.serviceTitle}
+              />
+            ) : (
+              <button
+                disabled
+                className="cursor-not-allowed rounded-lg bg-cloud-200 px-4 py-2 text-sm font-semibold text-ink-500"
+              >
+                Currently Unavailable
+              </button>
+            )}
           </div>
         </div>
 
@@ -111,12 +135,18 @@ export default async function ArtisanProfilePage({
       </div>
 
       <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-        <h2 className="font-display text-base font-bold text-navy-900">About {name}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-700">{profile.bio}</p>
+        <h2 className="font-display text-base font-bold text-navy-900">
+          About {name}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-700">
+          {profile.bio}
+        </p>
       </section>
 
       <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-        <h2 className="font-display text-base font-bold text-navy-900">Skills &amp; Services</h2>
+        <h2 className="font-display text-base font-bold text-navy-900">
+          Skills &amp; Services
+        </h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {profile.categories.map((cat: string) => (
             <span
@@ -136,13 +166,17 @@ export default async function ArtisanProfilePage({
           ))}
         </div>
         {profile.languages.length > 0 && (
-          <p className="mt-3 text-sm text-ink-500">Speaks: {profile.languages.join(", ")}</p>
+          <p className="mt-3 text-sm text-ink-500">
+            Speaks: {profile.languages.join(", ")}
+          </p>
         )}
       </section>
 
       {profile.recentJobs.length > 0 && (
         <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-          <h2 className="font-display text-base font-bold text-navy-900">Work Photos</h2>
+          <h2 className="font-display text-base font-bold text-navy-900">
+            Work Photos
+          </h2>
           <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
             {profile.recentJobs.map((job: { label: string }, i: number) => (
               <div key={i}>
@@ -159,7 +193,9 @@ export default async function ArtisanProfilePage({
       )}
 
       <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-        <h2 className="font-display text-base font-bold text-navy-900">Reviews</h2>
+        <h2 className="font-display text-base font-bold text-navy-900">
+          Reviews
+        </h2>
         {profile.reviewCount > 0 ? (
           <div className="mt-2 flex items-center gap-2">
             <Star className="h-4 w-4 fill-brand-amber-500 text-brand-amber-500" />
@@ -167,17 +203,19 @@ export default async function ArtisanProfilePage({
               {profile.rating.toFixed(1)}
             </span>
             <span className="text-sm text-ink-500">
-              from {profile.reviewCount} review{profile.reviewCount === 1 ? "" : "s"}
+              from {profile.reviewCount} review
+              {profile.reviewCount === 1 ? "" : "s"}
             </span>
           </div>
         ) : (
           <p className="mt-2 text-sm text-ink-500">
-            No reviews yet — {name} hasn&rsquo;t completed a job through NaijaCraft.
+            No reviews yet — {name} hasn&rsquo;t completed a job through
+            NaijaCraft.
           </p>
         )}
         <p className="mt-2 text-xs text-ink-500">
-          Detailed written reviews aren&rsquo;t built yet — this section shows the aggregate
-          rating only for now.
+          Detailed written reviews aren&rsquo;t built yet — this section shows
+          the aggregate rating only for now.
         </p>
       </section>
     </main>

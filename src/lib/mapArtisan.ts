@@ -29,6 +29,7 @@ export type ApiArtisan = {
     photoUrl?: string;
   }[];
   avatarUrl?: string;
+  isAvailable?: boolean;
 };
 
 function mapRecentJob(job: ApiArtisan["recentJobs"][number], index: number, artisanId: string): RecentJob {
@@ -63,5 +64,6 @@ export function mapApiArtisanToUi(doc: ApiArtisan): Artisan {
     verification: doc.verification,
     sellerType: doc.sellerType,
     avatarUrl: doc.avatarUrl ?? "",
+    isAvailable: doc.isAvailable ?? true,
   };
 }

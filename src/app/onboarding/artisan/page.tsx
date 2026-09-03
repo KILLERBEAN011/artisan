@@ -6,11 +6,17 @@ import Link from "next/link";
 import { Wrench } from "lucide-react";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 
-const CATEGORIES = ["Home Repair", "Tailoring & Fashion", "Graphic & Web Design"];
+const CATEGORIES = [
+  "Home Repair",
+  "Tailoring & Fashion",
+  "Graphic & Web Design",
+];
 const LANGUAGES = ["English", "Yoruba", "Igbo"];
 
 function toggle(list: string[], value: string) {
-  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+  return list.includes(value)
+    ? list.filter((v) => v !== value)
+    : [...list, value];
 }
 
 export default function ArtisanOnboardingPage() {
@@ -19,12 +25,15 @@ export default function ArtisanOnboardingPage() {
   const [title, setTitle] = useState("");
   const [serviceTitle, setServiceTitle] = useState("");
   const [bio, setBio] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState(""); // <-- New State
   const [categories, setCategories] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [fromPriceNaira, setFromPriceNaira] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("Lagos");
-  const [sellerType, setSellerType] = useState<"independent" | "company">("independent");
+  const [sellerType, setSellerType] = useState<"independent" | "company">(
+    "independent",
+  );
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -50,6 +59,7 @@ export default function ArtisanOnboardingPage() {
         title,
         serviceTitle,
         bio,
+        whatsappNumber, // <-- Added to payload
         categories,
         languages,
         fromPriceNaira: Number(fromPriceNaira),
@@ -88,14 +98,18 @@ export default function ArtisanOnboardingPage() {
           NaijaCraft
         </Link>
 
-        <h1 className="font-display text-xl font-bold text-navy-900">Set up your artisan profile</h1>
+        <h1 className="font-display text-xl font-bold text-navy-900">
+          Set up your artisan profile
+        </h1>
         <p className="mt-1 text-sm text-ink-500">
           This is what customers will see when they search for you.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-navy-900">Profile photo (optional)</span>
+            <span className="text-sm font-medium text-navy-900">
+              Profile photo (optional)
+            </span>
             <ImageUpload
               onUploaded={setAvatarUrl}
               shape="circle"
@@ -104,7 +118,9 @@ export default function ArtisanOnboardingPage() {
           </div>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-navy-900">Your title</span>
+            <span className="text-sm font-medium text-navy-900">
+              Your title
+            </span>
             <input
               type="text"
               required
@@ -116,7 +132,9 @@ export default function ArtisanOnboardingPage() {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-navy-900">Service headline</span>
+            <span className="text-sm font-medium text-navy-900">
+              Service headline
+            </span>
             <input
               type="text"
               required
@@ -139,11 +157,37 @@ export default function ArtisanOnboardingPage() {
             />
           </label>
 
+          {/* New WhatsApp Number Field */}
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-navy-900">
+              WhatsApp Number
+            </span>
+            <p className="-mt-1 text-xs text-ink-500">
+              We will send you instant alerts here when you get a new job
+              request. Include your country code (e.g., 2348012345678).
+            </p>
+            <input
+              type="text"
+              required
+              placeholder="2348012345678"
+              value={whatsappNumber}
+              onChange={(e) =>
+                setWhatsappNumber(e.target.value.replace(/\D/g, ""))
+              } // Strips out spaces or + signs instantly
+              className="rounded-lg border border-cloud-200 px-3 py-2 text-sm text-ink-900 focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100"
+            />
+          </label>
+
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-sm font-medium text-navy-900">Service categories</legend>
+            <legend className="text-sm font-medium text-navy-900">
+              Service categories
+            </legend>
             <div className="flex flex-wrap gap-3">
               {CATEGORIES.map((cat) => (
-                <label key={cat} className="flex items-center gap-2 text-sm text-ink-700">
+                <label
+                  key={cat}
+                  className="flex items-center gap-2 text-sm text-ink-700"
+                >
                   <input
                     type="checkbox"
                     checked={categories.includes(cat)}
@@ -156,10 +200,15 @@ export default function ArtisanOnboardingPage() {
           </fieldset>
 
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-sm font-medium text-navy-900">Languages</legend>
+            <legend className="text-sm font-medium text-navy-900">
+              Languages
+            </legend>
             <div className="flex flex-wrap gap-3">
               {LANGUAGES.map((lang) => (
-                <label key={lang} className="flex items-center gap-2 text-sm text-ink-700">
+                <label
+                  key={lang}
+                  className="flex items-center gap-2 text-sm text-ink-700"
+                >
                   <input
                     type="checkbox"
                     checked={languages.includes(lang)}
@@ -172,7 +221,9 @@ export default function ArtisanOnboardingPage() {
           </fieldset>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-navy-900">Starting price (NGN)</span>
+            <span className="text-sm font-medium text-navy-900">
+              Starting price (NGN)
+            </span>
             <input
               type="number"
               required
@@ -209,7 +260,9 @@ export default function ArtisanOnboardingPage() {
           </div>
 
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-sm font-medium text-navy-900">Seller type</legend>
+            <legend className="text-sm font-medium text-navy-900">
+              Seller type
+            </legend>
             <div className="flex gap-3">
               <label className="flex items-center gap-2 text-sm text-ink-700">
                 <input
@@ -237,11 +290,13 @@ export default function ArtisanOnboardingPage() {
               Bank details (optional)
             </legend>
             <p className="-mt-1 text-xs text-ink-500">
-              For payouts once a job is completed. You can skip this and add it later in your
-              dashboard.
+              For payouts once a job is completed. You can skip this and add it
+              later in your dashboard.
             </p>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-navy-900">Bank name</span>
+              <span className="text-sm font-medium text-navy-900">
+                Bank name
+              </span>
               <input
                 type="text"
                 placeholder="e.g. GTBank"
@@ -252,7 +307,9 @@ export default function ArtisanOnboardingPage() {
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium text-navy-900">Account number</span>
+                <span className="text-sm font-medium text-navy-900">
+                  Account number
+                </span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -263,7 +320,9 @@ export default function ArtisanOnboardingPage() {
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium text-navy-900">Account name</span>
+                <span className="text-sm font-medium text-navy-900">
+                  Account name
+                </span>
                 <input
                   type="text"
                   placeholder="As it appears on the account"

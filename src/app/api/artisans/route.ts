@@ -40,8 +40,12 @@ export async function GET(request: NextRequest) {
     const maxPrice = params.get("maxPrice");
     if (minPrice || maxPrice) {
       filter.fromPriceNaira = {};
-      if (minPrice) (filter.fromPriceNaira as Record<string, number>).$gte = Number(minPrice);
-      if (maxPrice) (filter.fromPriceNaira as Record<string, number>).$lte = Number(maxPrice);
+      if (minPrice)
+        (filter.fromPriceNaira as Record<string, number>).$gte =
+          Number(minPrice);
+      if (maxPrice)
+        (filter.fromPriceNaira as Record<string, number>).$lte =
+          Number(maxPrice);
     }
 
     const minRating = params.get("minRating");
@@ -54,8 +58,16 @@ export async function GET(request: NextRequest) {
     // substring match across the fields a customer would actually type.
     const q = params.get("q");
     if (q && q.trim()) {
-      const regex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-      filter.$or = [{ title: regex }, { serviceTitle: regex }, { bio: regex }, { categories: regex }];
+      const regex = new RegExp(
+        q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "i",
+      );
+      filter.$or = [
+        { title: regex },
+        { serviceTitle: regex },
+        { bio: regex },
+        { categories: regex },
+      ];
     }
 
     const artisans = await ArtisanProfile.find(filter)
@@ -78,7 +90,10 @@ export async function POST(request: NextRequest) {
     const session = await auth();
 
     if (!session) {
-      return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+      return NextResponse.json(
+        { error: "You must be logged in." },
+        { status: 401 },
+      );
     }
 
     if (session.user.role !== "artisan") {
@@ -105,6 +120,7 @@ export async function POST(request: NextRequest) {
       title,
       serviceTitle,
       bio,
+      whatsappNumber, // <-- Extracted from body
       categories,
       subservices,
       languages,
@@ -121,15 +137,29 @@ export async function POST(request: NextRequest) {
       avatarUrl,
     } = body;
 
-    if (!title || !serviceTitle || !bio || !categories?.length || !fromPriceNaira || !city || !state) {
+    // Added whatsappNumber to the strict backend validation
+    if (
+      !title ||
+      !serviceTitle ||
+      !bio ||
+      !whatsappNumber ||
+      !categories?.length ||
+      !fromPriceNaira ||
+      !city ||
+      !state
+    ) {
       return NextResponse.json(
-        { error: "title, serviceTitle, bio, categories, fromPriceNaira, city, and state are required." },
+        {
+          error:
+            "title, serviceTitle, bio, whatsappNumber, categories, fromPriceNaira, city, and state are required.",
+        },
         { status: 400 },
       );
     }
 
     const profile = await ArtisanProfile.create({
       userId: session.user.id,
+      whatsappNumber, // <-- Saved to the database
       title,
       serviceTitle,
       bio,

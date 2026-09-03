@@ -9,7 +9,11 @@ export function ArtisanCard({ artisan }: { artisan: Artisan }) {
     <article className="rounded-2xl border border-cloud-200 bg-white p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
-          <Avatar src={artisan.avatarUrl} alt={`Portrait of ${artisan.name}`} size="sm" />
+          <Avatar
+            src={artisan.avatarUrl}
+            alt={`Portrait of ${artisan.name}`}
+            size="sm"
+          />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-display text-base font-bold text-navy-900">
@@ -29,7 +33,9 @@ export function ArtisanCard({ artisan }: { artisan: Artisan }) {
               {artisan.bio}
             </p>
             <p className="mt-2 text-sm">
-              <span className="font-semibold text-navy-900">{artisan.name}</span>
+              <span className="font-semibold text-navy-900">
+                {artisan.name}
+              </span>
               <span className="text-ink-500"> · {artisan.title}</span>
             </p>
             <div className="mt-1 flex items-center gap-1.5 text-sm text-ink-700">
@@ -50,11 +56,23 @@ export function ArtisanCard({ artisan }: { artisan: Artisan }) {
             <p className="text-xs text-ink-500">{artisan.turnaround}</p>
           </div>
           <p className="text-xs text-ink-500">{artisan.availability}</p>
-          <RequestQuoteButton
-            artisanId={artisan.id}
-            serviceTitle={artisan.serviceTitle}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700 disabled:opacity-70 sm:w-auto"
-          />
+
+          {/* UPDATED: Conditional Availability Rendering */}
+          {artisan.isAvailable ? (
+            <RequestQuoteButton
+              artisanId={artisan.id}
+              serviceTitle={artisan.serviceTitle}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700 disabled:opacity-70 sm:w-auto"
+            />
+          ) : (
+            <button
+              disabled
+              className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-cloud-200 px-4 py-2 text-sm font-semibold text-ink-500 sm:w-auto"
+            >
+              Currently Unavailable
+            </button>
+          )}
+
           <Link
             href={`/artisans/${artisan.id}`}
             className="w-full rounded-lg border border-cloud-200 px-4 py-2 text-center text-sm font-semibold text-navy-900 transition-colors hover:bg-cloud-50 sm:w-auto"
@@ -66,7 +84,9 @@ export function ArtisanCard({ artisan }: { artisan: Artisan }) {
 
       {artisan.recentJobs.length > 0 && (
         <div className="mt-4 rounded-xl bg-cloud-50 p-4">
-          <p className="mb-2.5 text-sm font-semibold text-navy-900">Recent Jobs</p>
+          <p className="mb-2.5 text-sm font-semibold text-navy-900">
+            Recent Jobs
+          </p>
           <ul className="mb-3 space-y-1 text-sm text-ink-700">
             {artisan.recentJobs.map((job) => (
               <li key={job.id}>

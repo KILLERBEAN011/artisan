@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { LogOut, Menu, X, Wrench } from "lucide-react";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import Link from "next/link";
 
 const navLinks = [
@@ -82,7 +83,7 @@ export function SiteHeader() {
             href="/search"
             className="hidden rounded-lg bg-brand-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-amber-500 md:inline-block"
           >
-            Post a Job
+            Find a Pro
           </Link>
           <Link
             href="/search"
@@ -90,6 +91,10 @@ export function SiteHeader() {
           >
             Get a quote
           </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          {/* Your existing header buttons/links */}
         </div>
 
         <button

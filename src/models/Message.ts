@@ -4,7 +4,8 @@ const messageSchema = new Schema(
   {
     bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, index: true },
     senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    text: { type: String, required: true, trim: true, maxlength: 2000 },
+    text: { type: String, required: false, trim: true, maxlength: 2000 },
+    imageUrl: { type: String, required: false },
   },
   { timestamps: true },
 );

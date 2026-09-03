@@ -4,7 +4,11 @@ const recentJobSchema = new Schema(
   {
     label: { type: String, required: true },
     amountNaira: { type: Number, required: true },
-    status: { type: String, enum: ["completed", "in-progress"], required: true },
+    status: {
+      type: String,
+      enum: ["completed", "in-progress"],
+      required: true,
+    },
     photoUrl: { type: String },
   },
   { _id: false },
@@ -12,7 +16,17 @@ const recentJobSchema = new Schema(
 
 const artisanProfileSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    isAvailable: {
+       type: Boolean, default: true },
+
+    // The new WhatsApp number field for job alerts
+    whatsappNumber: { type: String, default: "" },
 
     title: { type: String, required: true }, // e.g. "Certified Electrician"
     serviceTitle: { type: String, required: true }, // e.g. "Electrical Repairs & Installations"
@@ -37,7 +51,11 @@ const artisanProfileSchema = new Schema(
     },
 
     verification: { type: [String], default: [] }, // e.g. ["ID Verified", "BVN Verified"]
-    sellerType: { type: String, enum: ["independent", "company"], default: "independent" },
+    sellerType: {
+      type: String,
+      enum: ["independent", "company"],
+      default: "independent",
+    },
 
     rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },

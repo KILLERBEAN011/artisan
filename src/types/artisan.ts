@@ -8,6 +8,7 @@ export type RecentJob = {
 
 export type SearchFilters = {
   query: string;
+  location: string;
   serviceCategories: string[];
   subservices: string[];
   minPrice: number;
@@ -22,6 +23,7 @@ export type SearchFilters = {
 
 export const defaultFilters: SearchFilters = {
   query: "",
+  location: "",
   serviceCategories: [],
   subservices: [],
   minPrice: 2500,
@@ -55,4 +57,6 @@ export type Artisan = {
   verification: string[];
   sellerType: "independent" | "company";
   avatarUrl: string;
+  isAvailable: boolean;
+  
 };

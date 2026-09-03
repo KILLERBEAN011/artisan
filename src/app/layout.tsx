@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-white text-ink-900 font-body">
+      <body className="bg-cloud-50 text-ink-900 dark:bg-[#101D3F] dark:text-white">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
