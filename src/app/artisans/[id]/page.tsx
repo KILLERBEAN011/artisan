@@ -86,7 +86,6 @@ export default async function ArtisanProfilePage({
               From NGN {profile.fromPriceNaira.toLocaleString()}
             </p>
 
-            {/* Conditional Availability Rendering for Profile Page */}
             {isAvailable ? (
               <RequestQuoteButton
                 artisanId={id}
@@ -172,10 +171,32 @@ export default async function ArtisanProfilePage({
         )}
       </section>
 
+      {profile.portfolioImages && profile.portfolioImages.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
+          <h2 className="font-display text-base font-bold text-navy-900">
+            Portfolio
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {profile.portfolioImages.map((url: string, i: number) => (
+              <div
+                key={i}
+                className="aspect-square overflow-hidden rounded-xl border border-cloud-100 bg-cloud-50"
+              >
+                <img
+                  src={url}
+                  alt={`${name}'s portfolio image ${i + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {profile.recentJobs.length > 0 && (
         <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
           <h2 className="font-display text-base font-bold text-navy-900">
-            Work Photos
+            Recent Jobs
           </h2>
           <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
             {profile.recentJobs.map((job: { label: string }, i: number) => (

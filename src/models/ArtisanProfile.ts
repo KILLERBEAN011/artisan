@@ -23,7 +23,9 @@ const artisanProfileSchema = new Schema(
       unique: true,
     },
     isAvailable: {
-       type: Boolean, default: true },
+      type: Boolean,
+      default: true,
+    },
 
     // The new WhatsApp number field for job alerts
     whatsappNumber: { type: String, default: "" },
@@ -65,6 +67,8 @@ const artisanProfileSchema = new Schema(
     // Cloudinary URL — empty string means "no photo yet", falls back to
     // the gradient placeholder used throughout the UI.
     avatarUrl: { type: String, default: "" },
+
+    portfolioImages: { type: [String], default: [] },
 
     // Optional — set at onboarding or added later via account settings.
     // Used by the admin to know where to send a manual payout.

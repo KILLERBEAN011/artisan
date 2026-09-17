@@ -6,6 +6,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { JobRow } from "@/components/dashboard/JobRow";
 import { artisanNavItems } from "@/lib/nav-items";
 import { AvailabilityToggle } from "@/components/dashboard/AvailabilityToggle";
+import { PortfolioEditor } from "@/components/dashboard/PortfolioEditor";
 import Link from "next/link";
 
 export default async function ArtisanDashboardPage() {
@@ -15,14 +16,12 @@ export default async function ArtisanDashboardPage() {
     redirect("/login");
   }
 
-  // A customer account has no business seeing the artisan dashboard.
   if (session.user.role === "customer") {
     redirect("/dashboard/customer");
   }
 
   const data = await getArtisanDashboardData(session.user.id);
 
-  // No profile yet? Send them to onboarding instead of an empty dashboard.
   if (!data) {
     redirect("/onboarding/artisan");
   }
@@ -48,6 +47,17 @@ export default async function ArtisanDashboardPage() {
           <StatCard key={stat.label} stat={stat} />
         ))}
       </div>
+
+      <section className="mt-6 rounded-2xl border border-cloud-200 bg-white p-5">
+        <h2 className="font-display text-base font-bold text-navy-900">
+          Portfolio Images
+        </h2>
+        <p className="mt-1 text-sm text-ink-700">
+          Upload up to 3 images of your past work to show on your public
+          profile.
+        </p>
+        <PortfolioEditor initialImages={profile.portfolioImages ?? []} />
+      </section>
 
       <section className="mt-6 rounded-2xl border border-cloud-200 bg-white p-5">
         <div className="flex items-center justify-between">

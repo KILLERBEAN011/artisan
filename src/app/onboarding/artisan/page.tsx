@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Wrench } from "lucide-react";
+import { Wrench, X } from "lucide-react";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 
 const CATEGORIES = [
@@ -25,7 +25,7 @@ export default function ArtisanOnboardingPage() {
   const [title, setTitle] = useState("");
   const [serviceTitle, setServiceTitle] = useState("");
   const [bio, setBio] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState(""); // <-- New State
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [fromPriceNaira, setFromPriceNaira] = useState("");
@@ -38,8 +38,19 @@ export default function ArtisanOnboardingPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+
+  // NEW: State for the portfolio gallery
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Helper to remove an image from the portfolio array
+  const handleRemovePortfolioImage = (indexToRemove: number) => {
+    setPortfolioImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove),
+    );
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +70,7 @@ export default function ArtisanOnboardingPage() {
         title,
         serviceTitle,
         bio,
-        whatsappNumber, // <-- Added to payload
+        whatsappNumber,
         categories,
         languages,
         fromPriceNaira: Number(fromPriceNaira),
@@ -70,6 +81,7 @@ export default function ArtisanOnboardingPage() {
         accountNumber,
         accountName,
         avatarUrl,
+        portfolioImages, // <-- Included in payload
       }),
     });
 
@@ -106,6 +118,7 @@ export default function ArtisanOnboardingPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+          {/* Profile Photo */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-navy-900">
               Profile photo (optional)
@@ -115,6 +128,49 @@ export default function ArtisanOnboardingPage() {
               shape="circle"
               label={avatarUrl ? "Change photo" : "Upload photo"}
             />
+          </div>
+
+          {/* NEW: Portfolio Gallery Upload */}
+          <div className="flex flex-col gap-1.5 rounded-xl border border-cloud-200 p-4">
+            <span className="text-sm font-medium text-navy-900">
+              Portfolio photos (optional)
+            </span>
+            <p className="-mt-1 mb-2 text-xs text-ink-500">
+              Showcase up to 6 photos of your past work to build trust.
+            </p>
+            <div className="flex flex-wrap items-start gap-3">
+              {portfolioImages.map((url, i) => (
+                <div
+                  key={i}
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-cloud-200 bg-cloud-50"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`Portfolio ${i + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePortfolioImage(i)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm transition-colors hover:bg-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {portfolioImages.length < 6 && (
+                <div className="h-20 w-20 shrink-0">
+                  <ImageUpload
+                    onUploaded={(url) =>
+                      setPortfolioImages((prev) => [...prev, url])
+                    }
+                    shape="square"
+                    label="Add work"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <label className="flex flex-col gap-1.5">
@@ -157,7 +213,6 @@ export default function ArtisanOnboardingPage() {
             />
           </label>
 
-          {/* New WhatsApp Number Field */}
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-navy-900">
               WhatsApp Number
@@ -173,7 +228,7 @@ export default function ArtisanOnboardingPage() {
               value={whatsappNumber}
               onChange={(e) =>
                 setWhatsappNumber(e.target.value.replace(/\D/g, ""))
-              } // Strips out spaces or + signs instantly
+              }
               className="rounded-lg border border-cloud-200 px-3 py-2 text-sm text-ink-900 focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100"
             />
           </label>

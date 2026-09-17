@@ -8,6 +8,7 @@ import { LogOut } from "lucide-react";
 const TABS = [
   { label: "Completed Bookings", href: "/admin/bookings" },
   { label: "Site Settings", href: "/admin/settings" },
+  { label: "Manage Artisans", href: "/admin/artisans" },
 ];
 
 export function AdminNav() {

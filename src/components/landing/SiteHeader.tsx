@@ -137,7 +137,7 @@ export function SiteHeader() {
               href="/search"
               className="rounded-lg bg-brand-green-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
             >
-              Post a Job
+              Find a Pro
             </Link>
             {status === "authenticated" ? (
               <>

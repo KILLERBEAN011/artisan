@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       accountNumber,
       accountName,
       avatarUrl,
+      portfolioImages,
     } = body;
 
     // Added whatsappNumber to the strict backend validation
@@ -186,6 +187,7 @@ export async function POST(request: NextRequest) {
         accountName: accountName ?? "",
       },
       avatarUrl: avatarUrl ?? "",
+      portfolioImages: portfolioImages ?? [],
     });
 
     return NextResponse.json({ profile }, { status: 201 });
@@ -193,6 +195,39 @@ export async function POST(request: NextRequest) {
     console.error("POST /api/artisans failed:", error);
     return NextResponse.json(
       { error: "Failed to create artisan profile. Check server logs." },
+      { status: 500 },
+    );
+  }
+}
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== "artisan") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectToDatabase();
+    const body = await request.json();
+
+    if (body.portfolioImages && Array.isArray(body.portfolioImages)) {
+      // Enforce the 3-image maximum server-side
+      const limitedImages = body.portfolioImages.slice(0, 3);
+
+      const profile = await ArtisanProfile.findOneAndUpdate(
+        { userId: session.user.id },
+        { portfolioImages: limitedImages },
+        { new: true },
+      );
+
+      return NextResponse.json({ profile }, { status: 200 });
+    }
+
+    return NextResponse.json({ error: "Invalid data." }, { status: 400 });
+  } catch (error) {
+    console.error("PATCH /api/artisans failed:", error);
+    return NextResponse.json(
+      { error: "Failed to update profile." },
       { status: 500 },
     );
   }
