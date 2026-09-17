@@ -10,11 +10,28 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "NaijaCraft — Trusted local artisans & handymen across Nigeria",
+  title: {
+    template: "%s | NaijaCraft",
+    default: "NaijaCraft | Trusted Local Artisans in Nigeria",
+  },
   description:
-    "Find verified professionals for plumbing, electrical, carpentry and more. Post a task, receive quotes, and hire with confidence — Naira-friendly pricing and secure in-app payments.",
+    "Find verified professionals for plumbing, electrical, carpentry and more. Hire with confidence using Naira-friendly pricing and secure in-app payments.",
+  keywords: [
+    "artisans in Nigeria",
+    "hire a plumber Lagos",
+    "handyman Nigeria",
+    "NaijaCraft",
+  ],
+  openGraph: {
+    title: "NaijaCraft | Trusted Local Artisans in Nigeria",
+    description:
+      "Find verified professionals for plumbing, electrical, and carpentry.",
+    url: "https://naijacraft.com.ng",
+    siteName: "NaijaCraft",
+    locale: "en_NG",
+    type: "website",
+  },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
