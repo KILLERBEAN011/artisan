@@ -5,28 +5,68 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function extractSearchFilters(userPrompt: string) {
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `You are a helpful assistant for NaijaCraft, a service marketplace in Nigeria. 
-Extract search parameters from the user's request into a JSON object.
+      model: "gemini-3.5-flash",
+      contents: `You are the NaijaCraft AI Assistant.
+Analyze the user's request and output a valid JSON object.
 
-Allowed fields to return:
-- "q": string (free-text keywords like specific tasks, skills, or items like "generator", "logo", "pipes")
-- "category": string (must match one of these exact categories if applicable: "Tailoring & Fashion", "Graphic & Web Design", "Home Repair", "Plumbing", "Electrical")
-- "location": string (city or area mentioned, e.g., "Yaba", "Lagos", "Ikeja", "Surulere")
-- "minPrice": number (if a minimum budget is mentioned in Naira)
-- "maxPrice": number (if a maximum budget is mentioned in Naira)
+Determine if the user's intent is "search" (hiring an artisan) or "chat" (asking for help/guidance).
 
-User request: "${userPrompt}"
+IF INTENT IS "search" (e.g., "I need an electrician in Lagos"):
+Return exactly this JSON format:
+{
+  "intent": "search",
+  "chatResponse": "",
+  "searchFilters": {
+    "q": "<extract ONLY the core skill or profession, e.g. 'electrician'>",
+    "location": "<extract city/state if mentioned, e.g. 'Lagos'>"
+  }
+}
 
-Return ONLY a valid JSON object with these extracted fields. Do not include markdown code blocks or extra text. If a field cannot be determined, omit it.`,
+IF INTENT IS "chat" (e.g., "How do I register as an artisan?"):
+Return exactly this JSON format:
+{
+  "intent": "chat",
+  "chatResponse": "<write a helpful, step-by-step guide answering their question>",
+  "searchFilters": {}
+}
+
+User request: "${userPrompt}"`,
+      config: {
+        responseMimeType: "application/json",
+      },
     });
 
-    const text = response.text ? response.text.trim() : "{}";
-    // Clean up any accidental markdown formatting if the model wraps it
-    const cleanJson = text.replace(/^```json\s*|\s*```$/g, "");
-    return JSON.parse(cleanJson);
-  } catch (error) {
+    let text = response.text ? response.text.trim() : "{}";
+
+    // Strip out any accidental markdown formatting
+    text = text
+      .replace(/^```(json)?/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    return JSON.parse(text);
+  } catch (error: unknown) {
     console.error("AI extraction failed:", error);
-    return { q: userPrompt }; // Fallback to raw text search if AI fails
+    const err = error as { status?: number; message?: string };
+
+    // Safety net for high traffic
+    if (
+      err?.status === 503 ||
+      err?.message?.toLowerCase().includes("unavailable") ||
+      err?.message?.toLowerCase().includes("high demand")
+    ) {
+      return {
+        intent: "chat",
+        chatResponse:
+          "I'm experiencing high network traffic right now! Please wait a moment and try asking again.",
+      };
+    }
+
+    // Standard fallback
+    return {
+      intent: "search",
+      searchFilters: { q: userPrompt },
+      chatResponse: "",
+    };
   }
 }
