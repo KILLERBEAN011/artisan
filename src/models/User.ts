@@ -13,6 +13,12 @@ const userSchema = new Schema(
     },
     // In a real signup flow this would be a bcrypt hash, never a plain password.
     passwordHash: { type: String, required: true },
+    // Add to your Mongoose Schema:
+    isVerified: { type: Boolean, default: false },
+    verifyToken: { type: String },
+    verifyTokenExpiry: { type: Date },
+    forgotPasswordToken: { type: String },
+    forgotPasswordTokenExpiry: { type: Date },
   },
   { timestamps: true },
 );
