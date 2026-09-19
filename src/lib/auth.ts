@@ -27,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
          _id: { toString: () => string };
          name: string;
          email: string;
-         role: string;
+         role: "customer" | "artisan" | "admin";
          passwordHash: string;
        }
 
