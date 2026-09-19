@@ -23,7 +23,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         await connectToDatabase();
 
-        const user = await User.findOne({ email: email.toLowerCase() }).lean();
+       interface AuthUser {
+         _id: { toString: () => string };
+         name: string;
+         email: string;
+         role: string;
+         passwordHash: string;
+       }
+
+       const user = (await User.findOne({
+         email: email.toLowerCase(),
+       }).lean()) as AuthUser;
         if (!user) return null;
 
         const passwordMatches = await bcrypt.compare(password, user.passwordHash);

@@ -30,10 +30,11 @@ export async function POST(request: Request) {
     const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // 3. Save the new user to MongoDB
+    // 3. Save the new user to MongoDB
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
+      passwordHash: hashedPassword, // <-- Changed to match your schema
       role,
       isVerified: false,
       verifyToken,
