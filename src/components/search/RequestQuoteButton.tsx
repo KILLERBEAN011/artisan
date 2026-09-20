@@ -88,7 +88,7 @@ export function RequestQuoteButton({
         }
       >
         <Send className="h-3.5 w-3.5" />
-        Request Quote
+        Book Service
       </button>
 
       {/* The Modal */}
@@ -97,7 +97,7 @@ export function RequestQuoteButton({
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-lg font-bold text-navy-900">
-                Request Quote
+                Book Service
               </h2>
               <button
                 onClick={() => setIsOpen(false)}

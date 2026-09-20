@@ -6,6 +6,9 @@ import { ArtisanProfile } from "@/models/ArtisanProfile";
 import "@/models/User";
 import { RequestQuoteButton } from "@/components/search/RequestQuoteButton";
 import { Avatar } from "@/components/shared/Avatar";
+import UnlockContactButton from "@/components/UnlockContactButton";
+import { auth } from "@/lib/auth";
+
 
 export default async function ArtisanProfilePage({
   params,
@@ -13,6 +16,9 @@ export default async function ArtisanProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  // Fetch the current logged-in user session
+  const session = await auth();
 
   await connectToDatabase();
 
@@ -87,10 +93,17 @@ export default async function ArtisanProfilePage({
             </p>
 
             {isAvailable ? (
-              <RequestQuoteButton
-                artisanId={id}
-                serviceTitle={profile.serviceTitle}
-              />
+              <div className="flex w-full flex-col gap-3">
+                <RequestQuoteButton
+                  artisanId={id}
+                  serviceTitle={profile.serviceTitle}
+                />
+                <UnlockContactButton
+                  artisanId={id}
+                  artisanName={name}
+                  clientEmail={session?.user?.email || ""}
+                />
+              </div>
             ) : (
               <button
                 disabled
