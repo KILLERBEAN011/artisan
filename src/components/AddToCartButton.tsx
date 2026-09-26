@@ -31,7 +31,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     setAdded(true);
     setTimeout(() => setAdded(false), 2000); // Reset button back to normal after 2 seconds
   };
-
+// h1 
   return (
     <button
       onClick={handleAdd}
