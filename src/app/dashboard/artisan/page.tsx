@@ -8,6 +8,7 @@ import { artisanNavItems } from "@/lib/nav-items";
 import { AvailabilityToggle } from "@/components/dashboard/AvailabilityToggle";
 import { PortfolioEditor } from "@/components/dashboard/PortfolioEditor";
 import Link from "next/link";
+import { PlusCircle } from "lucide-react";
 
 export default async function ArtisanDashboardPage() {
   const session = await auth();
@@ -34,13 +35,25 @@ export default async function ArtisanDashboardPage() {
       userName={session.user.name ?? "Artisan"}
       userRole={profile.title}
     >
-      <h1 className="font-display text-2xl font-bold text-navy-900">
-        Dashboard
-      </h1>
-      <p className="mt-1 text-sm text-ink-500">
-        You have {artisanStats[0].value} new request
-        {artisanStats[0].value === "1" ? "" : "s"} waiting on a quote.
-      </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-navy-900">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-ink-500">
+            You have {artisanStats[0].value} new request
+            {artisanStats[0].value === "1" ? "" : "s"} waiting on a quote.
+          </p>
+        </div>
+
+        <Link
+          href="/dashboard/products/new"
+          className="flex items-center gap-2 rounded-lg bg-brand-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700 w-fit"
+        >
+          <PlusCircle className="h-4 w-4" />
+          List New Item
+        </Link>
+      </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
         {artisanStats.map((stat) => (

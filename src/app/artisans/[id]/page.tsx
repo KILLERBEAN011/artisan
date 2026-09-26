@@ -1,14 +1,27 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, ShieldCheck, Star, Zap } from "lucide-react";
+import Image from "next/image"; // Added for product images
+import { ArrowLeft, MapPin, ShieldCheck, Star, Zap, Store } from "lucide-react";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ArtisanProfile } from "@/models/ArtisanProfile";
+import { Product } from "@/models/Product"; // Added Product model
+import mongoose from "mongoose"; // Added for ID validation
 import "@/models/User";
 import { RequestQuoteButton } from "@/components/search/RequestQuoteButton";
 import { Avatar } from "@/components/shared/Avatar";
 import UnlockContactButton from "@/components/UnlockContactButton";
+import AddToCartButton from "@/components/AddToCartButton"; // Added for marketplace
 import { auth } from "@/lib/auth";
 
+
+interface StoreProduct {
+  _id: { toString: () => string } | string;
+  name: string;
+  price: number;
+  category: string;
+  images: string[];
+  sellerId: string;
+}
 
 export default async function ArtisanProfilePage({
   params,
@@ -16,18 +29,36 @@ export default async function ArtisanProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
-  // Fetch the current logged-in user session
   const session = await auth();
 
   await connectToDatabase();
 
   let profile;
+  let products: StoreProduct[] = [];
+
   try {
-    profile = await ArtisanProfile.findById(id)
+    // Smart Lookup: Find by Profile ID (from search) OR User ID (from marketplace)
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+    const query = isValidObjectId
+      ? { $or: [{ _id: id }, { userId: id }] }
+      : { userId: id };
+
+    profile = await ArtisanProfile.findOne(query)
       .populate("userId", "name")
       .lean();
-  } catch {
+
+    // If profile exists, fetch any physical products they have listed
+    if (profile) {
+      const actualUserId = profile.userId._id
+        ? profile.userId._id.toString()
+        : profile.userId.toString();
+      products = await Product.find({
+        sellerId: actualUserId,
+        inStock: true,
+      }).lean();
+    }
+  } catch (error) {
+    console.error("Profile fetch error:", error);
     notFound();
   }
 
@@ -49,6 +80,7 @@ export default async function ArtisanProfilePage({
         Back to Search
       </Link>
 
+      {/* Existing Profile Header */}
       <div className="rounded-2xl border border-cloud-200 bg-white p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-4">
@@ -95,11 +127,11 @@ export default async function ArtisanProfilePage({
             {isAvailable ? (
               <div className="flex w-full flex-col gap-3">
                 <RequestQuoteButton
-                  artisanId={id}
+                  artisanId={profile._id.toString()}
                   serviceTitle={profile.serviceTitle}
                 />
                 <UnlockContactButton
-                  artisanId={id}
+                  artisanId={profile._id.toString()}
                   artisanName={name}
                   clientEmail={session?.user?.email || ""}
                 />
@@ -115,6 +147,7 @@ export default async function ArtisanProfilePage({
           </div>
         </div>
 
+        {/* Existing Stats Grid */}
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl bg-cloud-50 p-3">
             <p className="flex items-center gap-1 text-xs text-ink-500">
@@ -155,12 +188,68 @@ export default async function ArtisanProfilePage({
         </p>
       </section>
 
+      {/* NEW: Marketplace Storefront Section */}
+      {products.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-cloud-200 bg-brand-green-50/30 p-6">
+          <div className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-brand-green-600" />
+            <h2 className="font-display text-base font-bold text-navy-900">
+              Marketplace Storefront
+            </h2>
+          </div>
+          <p className="mt-1 text-sm text-ink-500 mb-5">
+            Physical items available for immediate purchase from {name}.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {products.map((product) => (
+              <div
+                key={product._id.toString()}
+                className="group flex flex-col overflow-hidden rounded-xl border border-cloud-200 bg-white shadow-sm transition-all hover:shadow-md"
+              >
+                <div className="relative aspect-square w-full bg-cloud-50">
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                  <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-navy-800 backdrop-blur-sm">
+                    {product.category}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-3">
+                  <h3 className="line-clamp-1 text-sm font-semibold text-navy-900">
+                    {product.name}
+                  </h3>
+                  <p className="mt-1 font-bold text-brand-green-600">
+                    ₦{product.price.toLocaleString()}
+                  </p>
+                  <div className="mt-3 mt-auto">
+                    <AddToCartButton
+                      product={{
+                        id: product._id.toString(),
+                        name: product.name,
+                        price: product.price,
+                        image: product.images[0],
+                        sellerId: product.sellerId.toString(),
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Existing Skills & Services */}
       <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
         <h2 className="font-display text-base font-bold text-navy-900">
           Skills &amp; Services
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          {profile.categories.map((cat: string) => (
+          {profile.categories?.map((cat: string) => (
             <span
               key={cat}
               className="rounded-full bg-navy-100 px-3 py-1 text-xs font-semibold text-navy-900"
@@ -168,7 +257,7 @@ export default async function ArtisanProfilePage({
               {cat}
             </span>
           ))}
-          {profile.subservices.map((sub: string) => (
+          {profile.subservices?.map((sub: string) => (
             <span
               key={sub}
               className="rounded-full bg-cloud-100 px-3 py-1 text-xs font-semibold text-ink-700"
@@ -177,13 +266,9 @@ export default async function ArtisanProfilePage({
             </span>
           ))}
         </div>
-        {profile.languages.length > 0 && (
-          <p className="mt-3 text-sm text-ink-500">
-            Speaks: {profile.languages.join(", ")}
-          </p>
-        )}
       </section>
 
+      {/* Existing Portfolio */}
       {profile.portfolioImages && profile.portfolioImages.length > 0 && (
         <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
           <h2 className="font-display text-base font-bold text-navy-900">
@@ -193,65 +278,19 @@ export default async function ArtisanProfilePage({
             {profile.portfolioImages.map((url: string, i: number) => (
               <div
                 key={i}
-                className="aspect-square overflow-hidden rounded-xl border border-cloud-100 bg-cloud-50"
+                className="relative aspect-square overflow-hidden rounded-xl border border-cloud-100 bg-cloud-50"
               >
-                <img
+                <Image
                   src={url}
                   alt={`${name}'s portfolio image ${i + 1}`}
-                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 hover:scale-105"
                 />
               </div>
             ))}
           </div>
         </section>
       )}
-
-      {profile.recentJobs.length > 0 && (
-        <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-          <h2 className="font-display text-base font-bold text-navy-900">
-            Recent Jobs
-          </h2>
-          <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
-            {profile.recentJobs.map((job: { label: string }, i: number) => (
-              <div key={i}>
-                <div
-                  role="img"
-                  aria-label={job.label}
-                  className="aspect-square rounded-xl bg-gradient-to-br from-navy-700 to-brand-green-600"
-                />
-                <p className="mt-1.5 text-xs text-ink-500">{job.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="mt-4 rounded-2xl border border-cloud-200 bg-white p-6">
-        <h2 className="font-display text-base font-bold text-navy-900">
-          Reviews
-        </h2>
-        {profile.reviewCount > 0 ? (
-          <div className="mt-2 flex items-center gap-2">
-            <Star className="h-4 w-4 fill-brand-amber-500 text-brand-amber-500" />
-            <span className="font-display text-lg font-bold text-navy-900">
-              {profile.rating.toFixed(1)}
-            </span>
-            <span className="text-sm text-ink-500">
-              from {profile.reviewCount} review
-              {profile.reviewCount === 1 ? "" : "s"}
-            </span>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-ink-500">
-            No reviews yet — {name} hasn&rsquo;t completed a job through
-            NaijaCraft.
-          </p>
-        )}
-        <p className="mt-2 text-xs text-ink-500">
-          Detailed written reviews aren&rsquo;t built yet — this section shows
-          the aggregate rating only for now.
-        </p>
-      </section>
     </main>
   );
 }

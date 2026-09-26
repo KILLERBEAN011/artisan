@@ -9,6 +9,9 @@ import "@fontsource/inter/600.css";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AiAssistantModal } from "@/components/ai/AiAssistantModal";
+import { CartProvider } from "@/context/CartContext";
+
+
 
 export const metadata: Metadata = {
   title: {
@@ -41,8 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="bg-cloud-50 text-ink-900 dark:bg-[#101D3F] dark:text-white">
-        <AuthProvider>{children}</AuthProvider>
-        <AiAssistantModal />
+        <CartProvider>
+          <AuthProvider>{children}</AuthProvider>
+          <AiAssistantModal />
+        </CartProvider>
       </body>
     </html>
   );
