@@ -40,7 +40,8 @@ export async function GET() {
     let availableBalance = 0;
 
     // Array to hold the history records
-    const recentSales: any[] = [];
+    const recentSales: Record<string, unknown>[] = [];
+
 
     orders.forEach((order: OrderDoc) => {
       order.items.forEach((item: OrderItem) => {
