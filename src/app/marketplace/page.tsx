@@ -131,7 +131,7 @@ export default async function MarketplacePage({
                       Shop the NaijaCraft Store
                     </Link>
                     <Link
-                      href="/coming-soon?feature=Sell+on+NaijaCraft"
+                      href="/sell"
                       className="flex h-12 items-center rounded-xl border border-navy-700 px-5 font-semibold text-white transition-colors hover:bg-navy-700"
                     >
                       Start selling
@@ -342,7 +342,7 @@ export default async function MarketplacePage({
             ))}
           </ol>
           <Link
-            href="/coming-soon?feature=Sell+on+NaijaCraft"
+            href="/sell"
             className="flex h-12 items-center self-start rounded-xl bg-brand-amber-500 px-6 font-extrabold text-navy-900 transition-colors hover:bg-brand-amber-600"
           >
             Open your shop
@@ -368,7 +368,7 @@ function EmptyState({ filtered }: { filtered: boolean }) {
       </p>
       <Link
         href={
-          filtered ? "/marketplace" : "/coming-soon?feature=Sell+on+NaijaCraft"
+          filtered ? "/marketplace" : "/sell"
         }
         className="mt-1 flex h-11 items-center rounded-lg bg-brand-green-600 px-5 text-sm font-bold text-white hover:bg-brand-green-700"
       >

@@ -1,87 +1,31 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import { Order } from "@/models/Order";
 import { auth } from "@/lib/auth";
-import mongoose from "mongoose";
+import { connectToDatabase } from "@/lib/mongodb";
+import { autoConfirmDue } from "@/lib/orders";
+import { errorResponse, getSessionUser, UserFacingError } from "@/lib/products";
+import { Order } from "@/models/Order";
 
-interface SessionUser {
-  id?: string;
-  _id?: string;
-  name?: string | null;
-  email?: string | null;
-  role?: string;
-}
-
-export async function GET(request: Request) {
+/* GET /api/customer/orders — the logged-in buyer's own orders.
+   (The old public "search by email or reference" lookup is gone: it let anyone
+   see a stranger's address and phone number.) */
+export async function GET() {
   try {
     await connectToDatabase();
-
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search");
-
-    // 1. Direct Tracking ID lookup
-    if (search) {
-      let query: any = {};
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        query._id = search;
-      } else {
-        // Match either Paystack reference or partial ObjectId
-        query = {
-          $or: [{ paystackReference: search }, { buyerEmail: search }],
-        };
-      }
-
-      const order = await Order.findOne(query).lean();
-      if (!order && search.length === 8) {
-        // Fallback: search for orders ending with the 8-character snippet
-        const allOrders = await Order.find()
-          .sort({ createdAt: -1 })
-          .limit(50)
-          .lean();
-        const found = allOrders.find((o) =>
-          o._id.toString().toUpperCase().endsWith(search.toUpperCase()),
-        );
-        if (found) {
-          return NextResponse.json({ order: found }, { status: 200 });
-        }
-      }
-
-      if (!order) {
-        return NextResponse.json(
-          { error: "No matching order found" },
-          { status: 404 },
-        );
-      }
-
-      return NextResponse.json({ order }, { status: 200 });
-    }
-
-    // 2. Logged-in customer orders list
+    const user = await getSessionUser();
     const session = await auth();
-    const user = session?.user as SessionUser | undefined;
+    if (!user) throw new UserFacingError("Please log in to see your orders.", 401);
+    await autoConfirmDue();
 
-    if (!user) {
-      return NextResponse.json({ orders: [] }, { status: 200 });
-    }
-
-    const buyerId = user._id || user.id;
-    const buyerEmail = user.email;
-
+    const email = session?.user?.email?.toLowerCase();
     const orders = await Order.find({
-      $or: [
-        ...(buyerId ? [{ buyerId }] : []),
-        ...(buyerEmail ? [{ buyerEmail }] : []),
-      ],
+      paymentStatus: { $in: ["paid", "amount_mismatch"] },
+      $or: [{ buyerId: user._id }, ...(email ? [{ buyerEmail: email, buyerId: { $exists: false } }] : [])],
     })
       .sort({ createdAt: -1 })
+      .limit(100)
       .lean();
-
-    return NextResponse.json({ orders }, { status: 200 });
+    return NextResponse.json({ orders });
   } catch (error) {
-    console.error("Fetch Customer Orders Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch order details." },
-      { status: 500 },
-    );
+    return errorResponse(error, "Failed to fetch your orders.");
   }
 }

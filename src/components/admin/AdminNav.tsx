@@ -8,15 +8,20 @@ import { LogOut } from "lucide-react";
 const TABS = [
   { label: "Completed Bookings", href: "/admin/bookings" },
   { label: "Listings", href: "/admin/listings" },
-  { label: "Marketplace Orders", href: "/dashboard/admin/orders" },
+  { label: "Sellers", href: "/admin/sellers" },
+  { label: "Marketplace Orders", href: "/admin/orders" },
   { label: "Site Settings", href: "/admin/settings" },
   { label: "Manage Artisans", href: "/admin/artisans" },
 ];
 
 export function AdminNav({
   pendingListings = 0,
+  pendingSellers = 0,
+  ordersNeedingAction = 0,
 }: {
   pendingListings?: number;
+  pendingSellers?: number;
+  ordersNeedingAction?: number;
 }) {
   const pathname = usePathname();
 
@@ -25,10 +30,15 @@ export function AdminNav({
       <nav className="flex flex-wrap gap-1">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
-          const badge =
-            tab.href === "/admin/listings" && pendingListings > 0
+          const waiting =
+            tab.href === "/admin/listings"
               ? pendingListings
-              : null;
+              : tab.href === "/admin/sellers"
+                ? pendingSellers
+                : tab.href === "/admin/orders"
+                  ? ordersNeedingAction
+                  : 0;
+          const badge = waiting > 0 ? waiting : null;
           return (
             <Link
               key={tab.href}

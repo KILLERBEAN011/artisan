@@ -1,240 +1,219 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { artisanNavItems } from "@/lib/nav-items";
-import {
-  Loader2,
-  PlusCircle,
-  Pencil,
-  Trash2,
-  Package,
-  Image as ImageIcon,
-} from "lucide-react";
-import Link from "next/link";
+import type { Metadata } from "next";
 import Image from "next/image";
-import toast, { Toaster } from "react-hot-toast";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Toaster } from "react-hot-toast";
+import { AlertTriangle, Package, PlusCircle, Truck } from "lucide-react";
+import { NotASellerYet, SellerPageShell } from "@/components/marketplace/SellerPageShell";
+import { SellerListingActions } from "@/components/marketplace/SellerListingActions";
+import { formatNaira } from "@/lib/marketplace";
+import { LISTING_TYPE_LABELS, STATUS_LABELS, type ProductStatus } from "@/lib/product-options";
+import { getSellerContext } from "@/lib/seller";
+import { Order } from "@/models/Order";
+import { Product } from "@/models/Product";
 
-interface Product {
+export const metadata: Metadata = { title: "My shop" };
+export const dynamic = "force-dynamic";
+
+const TABS: { key: "all" | ProductStatus; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "live", label: "Live" },
+  { key: "pending_review", label: "In review" },
+  { key: "rejected", label: "Needs changes" },
+  { key: "draft", label: "Drafts" },
+  { key: "archived", label: "Hidden" },
+];
+
+const STATUS_STYLES: Record<ProductStatus, string> = {
+  live: "bg-brand-green-100 text-brand-green-700",
+  pending_review: "bg-brand-amber-100 text-brand-amber-600",
+  rejected: "bg-red-50 text-red-700",
+  draft: "bg-cloud-100 text-ink-700",
+  archived: "bg-cloud-100 text-ink-500",
+};
+
+type Row = {
   _id: string;
+  slug: string;
   name: string;
   price: number;
-  category: string;
   images: string[];
-}
+  status: ProductStatus;
+  listingType: string;
+  stock: number;
+  soldCount: number;
+  review?: { rejectionReason?: string };
+};
 
-export default function ArtisanProductsPage() {
-  const { data: session, status } = useSession();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
+export default async function MyListingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const ctx = await getSellerContext("/dashboard/artisan/products");
+  if (ctx.admin) redirect("/admin/listings");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const user = session?.user as any;
-  const userId = user?.id || user?._id;
-
-  const fetchProducts = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const res = await fetch(`/api/products?sellerId=${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products || data || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchProducts();
-    } else if (status === "unauthenticated") {
-      setLoading(false);
-    }
-  }, [status, fetchProducts]);
-
-  const handleDelete = async (productId: string) => {
-    // 1. Replace the native confirm with a custom toast confirmation
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-gray-900">
-            Are you sure you want to delete this item? Buyers will no longer see
-            it.
-          </p>
-          <div className="flex gap-2 justify-end">
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="rounded px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={async () => {
-                toast.dismiss(t.id);
-                setProcessingId(`delete-${productId}`);
-
-                try {
-                  const res = await fetch(`/api/products?id=${productId}`, {
-                    method: "DELETE",
-                  });
-
-                  if (res.ok) {
-                    setProducts((prev) =>
-                      prev.filter((p) => p._id !== productId),
-                    );
-                    // 2. Replace the native alert with a success toast
-                    toast.success("Product deleted successfully!");
-                  } else {
-                    toast.error("Failed to delete product. Please try again.");
-                  }
-                } catch (error) {
-                  console.error(error);
-                  toast.error("An error occurred while deleting.");
-                } finally {
-                  setProcessingId(null);
-                }
-              }}
-              className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
-            >
-              Yes, delete
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        duration: 5000,
-        position: "top-center",
-      },
-    );
-  };
-
-  if (loading || status === "loading") {
+  if (!ctx.allowed) {
     return (
-      <DashboardShell
-        navItems={artisanNavItems("/dashboard/artisan/products")}
-        userName="Loading..."
-        userRole="Artisan"
-      >
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
-        </div>
-      </DashboardShell>
+      <SellerPageShell ctx={ctx}>
+        <NotASellerYet status={ctx.user.seller?.status} />
+      </SellerPageShell>
     );
   }
 
-  return (
-    <DashboardShell
-      navItems={artisanNavItems("/dashboard/artisan/products")}
-      userName={user?.name || "Artisan"}
-      userRole="Artisan"
-    >
-      {/* 3. Add the Toaster component so the popups actually render */}
-      <Toaster position="top-center" reverseOrder={false} />
+  const base = ctx.listingsHref;
+  const tabParam = (await searchParams).tab;
+  const tab = TABS.find((t) => t.key === tabParam)?.key ?? "all";
 
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+  const [docs, countRows, toSend] = await Promise.all([
+    Product.find(tab === "all" ? { sellerId: ctx.user._id } : { sellerId: ctx.user._id, status: tab })
+      .sort({ updatedAt: -1 })
+      .select("slug name price images status listingType stock soldCount review")
+      .lean(),
+    Product.aggregate<{ _id: ProductStatus; n: number }>([
+      { $match: { sellerId: ctx.user._id } },
+      { $group: { _id: "$status", n: { $sum: 1 } } },
+    ]),
+    // Paid orders this seller still has to send
+    Order.countDocuments({
+      paymentStatus: "paid",
+      shipments: { $elemMatch: { sellerId: ctx.user._id, status: "paid" } },
+    }),
+  ]);
+
+  const counts: Record<string, number> = Object.fromEntries(countRows.map((r) => [r._id, r.n]));
+  counts.all = countRows.reduce((sum, r) => sum + r.n, 0);
+  const rows = JSON.parse(JSON.stringify(docs)) as Row[];
+  const needsChanges = counts.rejected ?? 0;
+
+  return (
+    <SellerPageShell ctx={ctx}>
+      <Toaster position="top-center" />
+
+      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Products</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your marketplace listings, update details, or remove items.
+          <h1 className="font-display text-2xl font-bold text-navy-900">
+            {ctx.user.seller?.shopName || "My listings"}
+          </h1>
+          <p className="mt-1 text-sm text-ink-500">
+            {counts.live ?? 0} live on the marketplace · {counts.pending_review ?? 0} waiting for review
           </p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className="flex items-center gap-2 rounded-lg bg-brand-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700 w-fit"
-        >
-          <PlusCircle className="h-4 w-4" />
-          List New Item
-        </Link>
-      </div>
-
-      {products.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 py-20 text-center">
-          <Package className="mb-4 h-12 w-12 text-gray-300" />
-          <h3 className="text-lg font-medium text-gray-900">
-            No products listed
-          </h3>
-          <p className="mt-1 text-sm text-gray-500 max-w-sm mb-6">
-            You haven&apos;t added any items to the marketplace yet. Start
-            selling by creating your first listing!
-          </p>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard/sales"
+            className="flex h-11 w-fit items-center gap-2 rounded-lg border border-cloud-200 bg-white px-4 text-sm font-semibold text-navy-900 transition-colors hover:bg-cloud-50"
+          >
+            <Truck className="h-4 w-4" aria-hidden="true" />
+            Orders
+            {toSend > 0 && (
+              <span className="rounded-full bg-brand-amber-500 px-2 py-0.5 text-xs font-extrabold text-navy-900">
+                {toSend} to send
+              </span>
+            )}
+          </Link>
           <Link
             href="/dashboard/products/new"
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+            className="flex h-11 w-fit items-center gap-2 rounded-lg bg-brand-green-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-green-700"
           >
-            <PlusCircle className="h-4 w-4" />
-            List your first item
+            <PlusCircle className="h-4 w-4" aria-hidden="true" />
+            List something new
           </Link>
         </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <div
-              key={product._id}
-              className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-                {product.images && product.images.length > 0 ? (
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-gray-400">
-                    <ImageIcon className="h-10 w-10 opacity-50" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2">
-                  <span className="inline-flex items-center rounded-full bg-white/95 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-gray-800 shadow-sm uppercase tracking-wide">
-                    {product.category}
-                  </span>
-                </div>
-              </div>
+      </div>
 
-              <div className="flex flex-1 flex-col p-4">
-                <h3
-                  className="font-semibold text-gray-900 line-clamp-1"
-                  title={product.name}
-                >
-                  {product.name}
-                </h3>
-                <p className="mt-1 text-lg font-bold text-brand-green-600">
-                  ₦{product.price?.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  disabled
-                  className="flex items-center justify-center gap-2 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors opacity-60 cursor-not-allowed"
-                  title="Edit functionality coming soon"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  disabled={processingId === `delete-${product._id}`}
-                  className="flex items-center justify-center gap-2 py-3 text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors disabled:opacity-50"
-                >
-                  {processingId === `delete-${product._id}` ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
-                  )}
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+      {needsChanges > 0 && tab !== "rejected" && (
+        <Link
+          href={`${base}?tab=rejected`}
+          className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-800 hover:bg-red-100"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {needsChanges} listing{needsChanges === 1 ? " needs" : "s need"} changes before it can go live. See what to fix.
+        </Link>
       )}
-    </DashboardShell>
+
+      <nav aria-label="Filter listings" className="mb-5 flex gap-2 overflow-x-auto pb-1">
+        {TABS.map((t) => {
+          const active = t.key === tab;
+          const n = counts[t.key] ?? 0;
+          if (t.key !== "all" && n === 0 && !active) return null;
+          return (
+            <Link
+              key={t.key}
+              href={t.key === "all" ? base : `${base}?tab=${t.key}`}
+              aria-current={active ? "page" : undefined}
+              className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold ${
+                active ? "bg-navy-900 text-white" : "bg-white text-ink-700 ring-1 ring-cloud-200 hover:bg-cloud-100"
+              }`}
+            >
+              {t.label}
+              <span className={`text-xs ${active ? "text-white/80" : "text-ink-500"}`}>{n}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {rows.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-cloud-200 bg-white px-6 py-16 text-center">
+          <Package className="h-10 w-10 text-ink-300" aria-hidden="true" />
+          <p className="font-display text-lg font-bold text-navy-900">
+            {tab === "all" ? "You haven't listed anything yet" : "Nothing here"}
+          </p>
+          {tab === "all" && (
+            <>
+              <p className="max-w-sm text-sm text-ink-500">
+                Sell what you make, stock you resell, or a fixed-price service. Buyers pay safely through NaijaCraft.
+              </p>
+              <Link
+                href="/dashboard/products/new"
+                className="mt-2 flex h-11 items-center gap-2 rounded-lg bg-brand-green-600 px-5 text-sm font-semibold text-white hover:bg-brand-green-700"
+              >
+                <PlusCircle className="h-4 w-4" aria-hidden="true" />
+                List your first item
+              </Link>
+            </>
+          )}
+        </div>
+      ) : (
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {rows.map((p) => (
+            <li key={p._id} className="flex flex-col overflow-hidden rounded-2xl border border-cloud-200 bg-white">
+              <div className="relative aspect-[4/3] bg-cloud-100">
+                {p.images[0] && (
+                  <Image
+                    src={p.images[0]}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1280px) 300px, (min-width: 640px) 45vw, 100vw"
+                    className="object-cover"
+                  />
+                )}
+                <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_STYLES[p.status]}`}>
+                  {STATUS_LABELS[p.status]}
+                </span>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-1 p-4">
+                <h2 className="line-clamp-1 font-semibold text-navy-900" title={p.name}>
+                  {p.name}
+                </h2>
+                <p className="font-display text-lg font-bold text-navy-900">{formatNaira(p.price)}</p>
+                <p className="text-xs text-ink-500">
+                  {LISTING_TYPE_LABELS[p.listingType] ?? p.listingType}
+                  {p.listingType !== "service" && ` · ${p.stock} in stock`}
+                  {p.soldCount > 0 && ` · ${p.soldCount} sold`}
+                </p>
+                {p.status === "rejected" && p.review?.rejectionReason && (
+                  <p className="mt-2 rounded-lg bg-red-50 p-2.5 text-xs text-red-800">
+                    <strong>What to fix:</strong> {p.review.rejectionReason}
+                  </p>
+                )}
+                {p.status === "pending_review" && (
+                  <p className="mt-2 text-xs text-ink-500">We&apos;re checking this listing. It goes live once approved.</p>
+                )}
+              </div>
+
+              <SellerListingActions productId={p._id} slug={p.slug} status={p.status} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </SellerPageShell>
   );
 }

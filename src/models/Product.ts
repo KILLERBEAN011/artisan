@@ -1,48 +1,34 @@
 import mongoose, { Schema, Document, model, models } from "mongoose";
 
 /* ------------------------------------------------------------------ */
-/*  Allowed values                                                      */
+/*  Allowed values (defined in lib/product-options.ts so browser forms  */
+/*  can use them without loading database code)                         */
 /* ------------------------------------------------------------------ */
 
-export const PRODUCT_CATEGORIES = [
-  "Fashion",
-  "Home & Furniture",
-  "Art & Crafts",
-  "Beauty",
-  "Gadgets",
-  "Services",
-  "Food & Agro",
-] as const;
+import {
+  CONDITIONS,
+  DELIVERY_METHODS,
+  LISTING_TYPES,
+  PRODUCT_CATEGORIES,
+  PRODUCT_STATUSES,
+  SELLER_TYPES,
+  type Condition,
+  type DeliveryMethod,
+  type ListingType,
+  type ProductCategory,
+  type ProductStatus,
+  type SellerType,
+} from "@/lib/product-options";
 
-// official = NaijaCraft's own stock. seller = any verified marketplace seller.
-export const SELLER_TYPES = ["official", "seller"] as const;
-
-// handmade = made by the seller, resale = bought to sell on, service = fixed-price job
-export const LISTING_TYPES = ["handmade", "resale", "service"] as const;
-
-export const CONDITIONS = ["new", "used_like_new", "used_good"] as const;
-
-// draft -> pending_review -> live (or rejected). archived = hidden by the seller.
-export const PRODUCT_STATUSES = [
-  "draft",
-  "pending_review",
-  "live",
-  "rejected",
-  "archived",
-] as const;
-
-export const DELIVERY_METHODS = [
-  "self_delivery",
-  "pickup",
-  "platform",
-] as const;
-
-export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
-export type SellerType = (typeof SELLER_TYPES)[number];
-export type ListingType = (typeof LISTING_TYPES)[number];
-export type Condition = (typeof CONDITIONS)[number];
-export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
-export type DeliveryMethod = (typeof DELIVERY_METHODS)[number];
+export {
+  CONDITIONS,
+  DELIVERY_METHODS,
+  LISTING_TYPES,
+  PRODUCT_CATEGORIES,
+  PRODUCT_STATUSES,
+  SELLER_TYPES,
+};
+export type { Condition, DeliveryMethod, ListingType, ProductCategory, ProductStatus, SellerType };
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */

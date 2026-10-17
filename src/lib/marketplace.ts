@@ -15,45 +15,12 @@ import {
 
 export const CATEGORIES = PRODUCT_CATEGORIES;
 
-export const NIGERIAN_STATES = [
-  "Abia",
-  "Adamawa",
-  "Akwa Ibom",
-  "Anambra",
-  "Bauchi",
-  "Bayelsa",
-  "Benue",
-  "Borno",
-  "Cross River",
-  "Delta",
-  "Ebonyi",
-  "Edo",
-  "Ekiti",
-  "Enugu",
-  "FCT",
-  "Gombe",
-  "Imo",
-  "Jigawa",
-  "Kaduna",
-  "Kano",
-  "Katsina",
-  "Kebbi",
-  "Kogi",
-  "Kwara",
-  "Lagos",
-  "Nasarawa",
-  "Niger",
-  "Ogun",
-  "Ondo",
-  "Osun",
-  "Oyo",
-  "Plateau",
-  "Rivers",
-  "Sokoto",
-  "Taraba",
-  "Yobe",
-  "Zamfara",
-] as const;
+export {
+  CONDITION_LABELS,
+  DELIVERY_LABELS,
+  LISTING_TYPE_LABELS,
+  NIGERIAN_STATES,
+} from "@/lib/product-options";
 
 export const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -69,24 +36,6 @@ const SORTS: Record<string, Record<string, 1 | -1>> = {
   price_desc: { price: -1, createdAt: -1 },
   top_rated: { ratingAvg: -1, ratingCount: -1 },
   popular: { soldCount: -1, createdAt: -1 },
-};
-
-export const CONDITION_LABELS: Record<string, string> = {
-  new: "New",
-  used_like_new: "Used, like new",
-  used_good: "Used, good",
-};
-
-export const LISTING_TYPE_LABELS: Record<string, string> = {
-  handmade: "Handmade",
-  resale: "Resale",
-  service: "Service",
-};
-
-export const DELIVERY_LABELS: Record<string, string> = {
-  self_delivery: "Seller delivers",
-  pickup: "Pickup",
-  platform: "NaijaCraft delivery",
 };
 
 export function formatNaira(amount: number) {
@@ -133,6 +82,7 @@ export type MarketplaceProduct = {
   sellerName: string;
   sellerState: string | null;
   sellerVerified: boolean;
+  sellerIsArtisan: boolean;
   sellerShopSlug: string | null;
 };
 

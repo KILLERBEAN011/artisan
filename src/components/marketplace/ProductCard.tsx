@@ -126,6 +126,14 @@ export default function ProductCard({
             <span className="flex w-full items-center justify-center rounded-lg bg-cloud-100 py-2.5 text-sm font-semibold text-ink-500">
               Sold out
             </span>
+          ) : product.options?.some((o) => o.values.length > 0) ? (
+            // Sizes / colours must be chosen on the product page
+            <Link
+              href={href}
+              className="flex w-full items-center justify-center rounded-lg border border-brand-green-600 py-2.5 text-sm font-semibold text-brand-green-700 transition-colors hover:bg-brand-green-100"
+            >
+              Choose options
+            </Link>
           ) : (
             <AddToCartButton
               product={{
@@ -134,6 +142,7 @@ export default function ProductCard({
                 price: product.price,
                 image: product.images[0],
                 sellerId: product.sellerId,
+                slug: product.slug,
               }}
             />
           )}

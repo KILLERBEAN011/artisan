@@ -3,6 +3,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
+import { User } from "@/models/User";
+import { Order } from "@/models/Order";
 import { AdminNav } from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({
@@ -21,9 +23,18 @@ export default async function AdminLayout({
 
   // Number of listings waiting for review, shown as a badge on the Listings tab
   await connectToDatabase();
-  const pendingListings = await Product.countDocuments({
-    status: "pending_review",
-  });
+  const [pendingListings, pendingSellers, ordersNeedingAction] = await Promise.all([
+    Product.countDocuments({ status: "pending_review" }),
+    User.countDocuments({ "seller.status": "pending" }),
+    // Disputes, payment problems and sellers waiting to be paid
+    Order.countDocuments({
+      $or: [
+        { paymentStatus: "amount_mismatch" },
+        { "shipments.status": "disputed" },
+        { "shipments.payoutStatus": "released" },
+      ],
+    }),
+  ]);
 
   return (
     <div className="min-h-screen bg-cloud-50">
@@ -40,7 +51,11 @@ export default async function AdminLayout({
               Logged in as {session.user.name}
             </p>
           </div>
-          <AdminNav pendingListings={pendingListings} />
+          <AdminNav
+            pendingListings={pendingListings}
+            pendingSellers={pendingSellers}
+            ordersNeedingAction={ordersNeedingAction}
+          />
         </div>
       </header>
       {children}

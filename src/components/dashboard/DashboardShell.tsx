@@ -11,8 +11,10 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
+  Package,
   ShieldCheck,
   Star,
+  Store,
   User,
   Wallet,
   Wrench,
@@ -30,6 +32,8 @@ const ICONS: Record<NavIconKey, typeof LayoutGrid> = {
   support: LifeBuoy,
   earnings: Banknote,
   verification: ShieldCheck,
+  shop: Store,
+  orders: Package,
 };
 
 type Props = {

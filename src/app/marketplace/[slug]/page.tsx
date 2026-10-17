@@ -200,44 +200,32 @@ export default async function ProductPage({ params }: Props) {
               )}
             </div>
 
-            {(product.leadTimeDays || product.service?.durationMinutes) && (
+            {!isService && product.leadTimeDays ? (
               <p className="flex items-center gap-2 text-sm text-ink-700">
                 <Clock className="h-4 w-4" aria-hidden="true" />
-                {isService
-                  ? `Takes about ${formatDuration(product.service!.durationMinutes!)}`
-                  : `Made to order: ready in about ${product.leadTimeDays} day${product.leadTimeDays === 1 ? "" : "s"}`}
+                {`Made to order: ready in about ${product.leadTimeDays} day${product.leadTimeDays === 1 ? "" : "s"}`}
               </p>
-            )}
-
-            {product.options.length > 0 && (
-              <div className="flex flex-col gap-3">
-                {product.options.map((option) => (
-                  <div key={option.name}>
-                    <p className="mb-2 text-sm font-bold">
-                      Available {option.name.toLowerCase()}
-                    </p>
-                    <ul className="flex flex-wrap gap-2">
-                      {option.values.map((v) => (
-                        <li
-                          key={v}
-                          className="rounded-lg border border-cloud-200 bg-white px-3 py-1.5 text-sm"
-                        >
-                          {v}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
+            ) : null}
 
             {isService ? (
-              <Link
-                href={`/coming-soon?feature=${encodeURIComponent("Book fixed-price services")}`}
-                className="flex h-12 items-center justify-center rounded-xl bg-navy-900 font-bold text-white hover:bg-navy-800"
-              >
-                Book this service
-              </Link>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={
+                    product.sellerIsArtisan
+                      ? `/artisans/${product.sellerId}`
+                      : `/coming-soon?feature=${encodeURIComponent("Booking this service")}`
+                  }
+                  className="flex h-12 items-center justify-center rounded-xl bg-navy-900 font-bold text-white hover:bg-navy-800"
+                >
+                  Book this service
+                </Link>
+                {product.sellerIsArtisan && (
+                  <p className="text-center text-xs text-ink-500">
+                    You&apos;ll request a booking on {product.sellerName}&apos;s
+                    profile and pay through NaijaCraft once they confirm.
+                  </p>
+                )}
+              </div>
             ) : (
               <ProductPurchasePanel
                 product={{
@@ -246,45 +234,88 @@ export default async function ProductPage({ params }: Props) {
                   price: product.price,
                   image: product.images[0],
                   sellerId: product.sellerId,
+                  slug: product.slug,
                 }}
+                options={product.options}
+                stock={product.stock}
                 priceLabel={formatNaira(product.price)}
                 shareUrl={shareUrl}
                 soldOut={soldOut}
               />
             )}
 
+            {/* Service details (services don't ship) */}
+            {isService && (
+              <div className="flex flex-col gap-3 rounded-card border border-cloud-200 bg-white p-5">
+                <h2 className="flex items-center gap-2 text-[15px] font-bold">
+                  <MapPin className="h-4 w-4" aria-hidden="true" /> About this
+                  service
+                </h2>
+                <dl className="flex flex-col gap-2 text-sm">
+                  {state && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-700">Available in</dt>
+                      <dd className="font-semibold">
+                        {[product.location?.city, state]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </dd>
+                    </div>
+                  )}
+                  {product.service?.durationMinutes ? (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-700">Takes about</dt>
+                      <dd className="font-semibold">
+                        {formatDuration(product.service.durationMinutes)}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {product.service?.includes && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-ink-700">Included</dt>
+                      <dd className="font-semibold">
+                        {product.service.includes}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
             {/* Delivery */}
-            <div className="flex flex-col gap-3 rounded-card border border-cloud-200 bg-white p-5">
-              <h2 className="flex items-center gap-2 text-[15px] font-bold">
-                <Truck className="h-4 w-4" aria-hidden="true" /> Delivery
-              </h2>
-              {product.delivery.length > 0 ? (
-                <ul className="flex flex-col gap-2 text-sm">
-                  {product.delivery.map((d, i) => (
-                    <li key={i} className="flex justify-between gap-4">
-                      <span className="text-ink-700">
-                        {DELIVERY_LABELS[d.method] ?? d.method}
-                        {d.etaDays
-                          ? `, ${d.etaDays} day${d.etaDays === 1 ? "" : "s"}`
-                          : ""}
-                        {d.note ? ` · ${d.note}` : ""}
-                        {d.states && d.states.length > 0
-                          ? ` (${d.states.join(", ")})`
-                          : ""}
-                      </span>
-                      <strong className="shrink-0">
-                        {d.fee > 0 ? formatNaira(d.fee) : "Free"}
-                      </strong>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-ink-700">
-                  The seller arranges delivery with you after you order
-                  {state ? `. Ships from ${state}.` : "."}
-                </p>
-              )}
-            </div>
+            {!isService && (
+              <div className="flex flex-col gap-3 rounded-card border border-cloud-200 bg-white p-5">
+                <h2 className="flex items-center gap-2 text-[15px] font-bold">
+                  <Truck className="h-4 w-4" aria-hidden="true" /> Delivery
+                </h2>
+                {product.delivery.length > 0 ? (
+                  <ul className="flex flex-col gap-2 text-sm">
+                    {product.delivery.map((d, i) => (
+                      <li key={i} className="flex justify-between gap-4">
+                        <span className="text-ink-700">
+                          {DELIVERY_LABELS[d.method] ?? d.method}
+                          {d.etaDays
+                            ? `, ${d.etaDays} day${d.etaDays === 1 ? "" : "s"}`
+                            : ""}
+                          {d.note ? ` · ${d.note}` : ""}
+                          {d.states && d.states.length > 0
+                            ? ` (${d.states.join(", ")})`
+                            : ""}
+                        </span>
+                        <strong className="shrink-0">
+                          {d.fee > 0 ? formatNaira(d.fee) : "Free"}
+                        </strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-ink-700">
+                    The seller arranges delivery with you after you order
+                    {state ? `. Ships from ${state}.` : "."}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Payment protection */}
             <div className="flex items-start gap-3 rounded-card bg-brand-green-100 p-5">
@@ -312,12 +343,6 @@ export default async function ProductPage({ params }: Props) {
             <p className="whitespace-pre-line leading-relaxed text-ink-700">
               {product.description}
             </p>
-            {isService && product.service?.includes && (
-              <p className="whitespace-pre-line leading-relaxed text-ink-700">
-                <strong className="text-ink-900">Included: </strong>
-                {product.service.includes}
-              </p>
-            )}
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-cloud-200 pt-4 text-sm">
               <Detail term="Category" value={product.category} />
               {!isService && (

@@ -4,6 +4,8 @@ export function customerNavItems(activeHref: string): NavItem[] {
   const items: Omit<NavItem, "active">[] = [
     { label: "Overview", icon: "overview", href: "/dashboard/customer" },
     { label: "My Jobs", icon: "jobs", href: "/dashboard/customer/jobs" },
+    { label: "My Orders", icon: "orders", href: "/dashboard/customer/orders" },
+    { label: "My Shop", icon: "shop", href: "/dashboard/listings" },
     { label: "Wallet", icon: "wallet", href: "/dashboard/customer/wallet" },
     { label: "Reviews", icon: "reviews", href: "/dashboard/customer/reviews" },
     {
@@ -35,8 +37,13 @@ export function artisanNavItems(activeHref: string): NavItem[] {
     },
     {
       label: "My Products",
-      icon: "overview",
+      icon: "shop",
       href: "/dashboard/artisan/products",
+    },
+    {
+      label: "Shop Orders",
+      icon: "orders",
+      href: "/dashboard/sales",
     },
     { label: "Reviews", icon: "reviews", href: "/dashboard/artisan/reviews" },
     {

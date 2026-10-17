@@ -16,10 +16,11 @@ export default async function ComingSoonPage({
           <Construction className="h-6 w-6 text-brand-amber-600" />
         </div>
         <h1 className="mt-3 font-display text-lg font-bold text-navy-900">
-          {label} isn&rsquo;t built yet
+          {`${label} isn’t ready yet`}
         </h1>
         <p className="mt-1.5 text-sm text-ink-500">
-          We&rsquo;re still working on this part of NaijaCraft — check back soon.
+          We&rsquo;re still working on this part of NaijaCraft — check back
+          soon.
         </p>
         <Link
           href="/search"

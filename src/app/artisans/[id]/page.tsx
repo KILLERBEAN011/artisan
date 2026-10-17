@@ -4,7 +4,7 @@ import Image from "next/image"; // Added for product images
 import { ArrowLeft, MapPin, ShieldCheck, Star, Zap, Store } from "lucide-react";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ArtisanProfile } from "@/models/ArtisanProfile";
-import { Product } from "@/models/Product"; // Added Product model
+import { Product, PUBLIC_PRODUCT_FILTER } from "@/models/Product";
 import mongoose from "mongoose"; // Added for ID validation
 import "@/models/User";
 import { RequestQuoteButton } from "@/components/search/RequestQuoteButton";
@@ -15,7 +15,8 @@ import { auth } from "@/lib/auth";
 
 
 interface StoreProduct {
-  _id: { toString: () => string } | string;
+  _id: string;
+  slug: string;
   name: string;
   price: number;
   category: string;
@@ -52,10 +53,24 @@ export default async function ArtisanProfilePage({
       const actualUserId = profile.userId._id
         ? profile.userId._id.toString()
         : profile.userId.toString();
-      products = await Product.find({
+      // Only approved, in-stock listings. Drafts and items waiting for review stay private.
+      const docs = await Product.find({
+        ...PUBLIC_PRODUCT_FILTER,
         sellerId: actualUserId,
         inStock: true,
-      }).lean();
+      })
+        .sort({ createdAt: -1 })
+        .limit(12)
+        .lean();
+      products = docs.map((p) => ({
+        _id: String(p._id),
+        slug: p.slug,
+        name: p.name,
+        price: p.price,
+        category: p.category,
+        images: p.images,
+        sellerId: String(p.sellerId),
+      }));
     }
   } catch (error) {
     console.error("Profile fetch error:", error);
@@ -204,23 +219,32 @@ export default async function ArtisanProfilePage({
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {products.map((product) => (
               <div
-                key={product._id.toString()}
+                key={product._id}
                 className="group flex flex-col overflow-hidden rounded-xl border border-cloud-200 bg-white shadow-sm transition-all hover:shadow-md"
               >
-                <div className="relative aspect-square w-full bg-cloud-50">
+                <Link
+                  href={`/marketplace/${product.slug}`}
+                  className="relative block aspect-square w-full bg-cloud-50"
+                >
                   <Image
                     src={product.images[0]}
                     alt={product.name}
                     fill
+                    sizes="(min-width: 768px) 240px, (min-width: 640px) 50vw, 100vw"
                     className="object-cover"
                   />
                   <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-navy-800 backdrop-blur-sm">
                     {product.category}
                   </span>
-                </div>
+                </Link>
                 <div className="flex flex-1 flex-col p-3">
                   <h3 className="line-clamp-1 text-sm font-semibold text-navy-900">
-                    {product.name}
+                    <Link
+                      href={`/marketplace/${product.slug}`}
+                      className="hover:text-brand-green-600"
+                    >
+                      {product.name}
+                    </Link>
                   </h3>
                   <p className="mt-1 font-bold text-brand-green-600">
                     ₦{product.price.toLocaleString()}
@@ -228,11 +252,11 @@ export default async function ArtisanProfilePage({
                   <div className="mt-3 mt-auto">
                     <AddToCartButton
                       product={{
-                        id: product._id.toString(),
+                        id: product._id,
                         name: product.name,
                         price: product.price,
                         image: product.images[0],
-                        sellerId: product.sellerId.toString(),
+                        sellerId: product.sellerId,
                       }}
                     />
                   </div>

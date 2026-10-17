@@ -10,7 +10,9 @@ export default function ArtisanEarningsPage() {
 
   const [availableBalance, setAvailableBalance] = useState(0);
   const [pendingEscrow, setPendingEscrow] = useState(0);
-  const [salesHistory, setSalesHistory] = useState<any[]>([]);
+  const [salesHistory, setSalesHistory] = useState<
+    { id: string; productName: string; buyerName: string; amount: number; status: string; date: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   // State variables for the bank form
@@ -113,10 +115,10 @@ export default function ArtisanEarningsPage() {
               Automatic Payouts Enabled
             </h3>
             <p className="mt-1 text-sm text-blue-700 leading-relaxed max-w-2xl">
-              You don't need to manually request withdrawals. NaijaCraft
-              automatically transfers your <strong>Available Balance</strong>{" "}
-              directly to your saved bank account immediately after the buyer's
-              delivery is confirmed.
+              You don&apos;t need to request a withdrawal. Once the buyer confirms
+              delivery, the money moves to your <strong>Available Balance</strong>{" "}
+              and NaijaCraft transfers it to your saved bank account. Amounts
+              shown are after the 5% marketplace commission.
             </p>
           </div>
         </div>
@@ -224,7 +226,7 @@ export default function ArtisanEarningsPage() {
           <div className="p-6 space-y-4">
             <p className="text-xs text-gray-500 mb-4">
               This is shared with NaijaCraft admins when they release a
-              completed job's payment to you.
+              completed job&apos;s payment to you.
             </p>
             <div>
               <label className="block text-xs font-medium text-gray-700">

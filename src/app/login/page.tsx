@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { callbackFromLocation } from "@/lib/safe-redirect";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +31,8 @@ export default function LoginPage() {
     if (res?.error) {
       setError("Invalid email or password. Please try again.");
     } else {
-      router.push("/dashboard");
+      // Back to where they were going (e.g. /sell/apply), or their dashboard
+      router.push(callbackFromLocation("/dashboard"));
       router.refresh();
     }
   };
@@ -116,9 +118,14 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/signup"
+            onClick={(e) => {
+              // Keep ?callbackUrl= so new users also land where they were going
+              e.preventDefault();
+              router.push(`/signup${window.location.search}`);
+            }}
             className="font-semibold text-brand-green-600 hover:underline"
           >
             Sign up

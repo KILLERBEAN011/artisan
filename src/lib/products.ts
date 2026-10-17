@@ -109,6 +109,10 @@ const wholeNumber = (value: unknown, field: string) => {
   return n;
 };
 
+/** Optional numbers: null or "" means "clear this field", undefined means "leave it alone". */
+const optional = <T>(value: unknown, parse: (v: unknown) => T) =>
+  value === null || value === "" ? null : parse(value);
+
 const text = (value: unknown, max: number) =>
   value === undefined ? undefined : String(value).trim().slice(0, max);
 
@@ -134,13 +138,15 @@ export function pickProductFields(
     name: text(body.name, 120),
     description: text(body.description, 4000),
     price: money(body.price, "Price"),
-    compareAtPrice: money(body.compareAtPrice, "Old price"),
+    compareAtPrice: optional(body.compareAtPrice, (v) => money(v, "Old price")),
     category: oneOf(PRODUCT_CATEGORIES, body.category, "Category"),
     images: stringList(body.images, 8),
     listingType: oneOf(LISTING_TYPES, body.listingType, "Listing type"),
     condition: oneOf(CONDITIONS, body.condition, "Condition"),
     stock: wholeNumber(body.stock, "Stock"),
-    leadTimeDays: wholeNumber(body.leadTimeDays, "Lead time"),
+    leadTimeDays: optional(body.leadTimeDays, (v) =>
+      wholeNumber(v, "Lead time"),
+    ),
     proofOfPurchase: text(body.proofOfPurchase, 500),
     authenticityConfirmed:
       body.authenticityConfirmed === undefined
@@ -185,7 +191,7 @@ export function pickProductFields(
 
   if (admin) {
     fields.sellerType = oneOf(SELLER_TYPES, body.sellerType, "Seller type");
-    fields.costPrice = money(body.costPrice, "Cost price");
+    fields.costPrice = optional(body.costPrice, (v) => money(v, "Cost price"));
     if (body.isFeatured !== undefined)
       fields.isFeatured = Boolean(body.isFeatured);
   }
@@ -255,6 +261,8 @@ export async function attachSellers<T extends ProductLike>(products: T[]) {
       sellerState: s?.seller?.state ?? null,
       sellerVerified:
         official || s?.seller?.status === "approved" || s?.role === "artisan",
+      // Lets service pages send buyers to the artisan's booking profile
+      sellerIsArtisan: !official && s?.role === "artisan",
     };
   });
 }

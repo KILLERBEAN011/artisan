@@ -88,10 +88,10 @@ export default function SellerWalletPage() {
               Automatic Payouts Enabled
             </h3>
             <p className="mt-1 text-sm text-blue-700 leading-relaxed max-w-2xl">
-              You don't need to manually request withdrawals. NaijaCraft
-              automatically transfers your <strong>Available Balance</strong>{" "}
-              directly to your saved bank account immediately after the buyer's
-              delivery is confirmed.
+              You don&apos;t need to request a withdrawal. Once the buyer confirms
+              delivery, the money moves to your <strong>Available Balance</strong>{" "}
+              and NaijaCraft transfers it to your saved bank account. Amounts
+              shown are after the 5% marketplace commission.
             </p>
           </div>
         </div>

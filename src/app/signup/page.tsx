@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Wrench, Eye, EyeOff } from "lucide-react";
+import { callbackFromLocation } from "@/lib/safe-redirect";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -51,7 +52,8 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    // Back to where they were going (e.g. /sell/apply), or their dashboard
+    router.push(callbackFromLocation("/dashboard"));
     router.refresh();
   }
 
@@ -172,6 +174,10 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(`/login${window.location.search}`);
+            }}
             className="font-semibold text-brand-green-600 hover:text-brand-green-700"
           >
             Log in

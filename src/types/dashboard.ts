@@ -24,7 +24,9 @@ export type NavIconKey =
   | "settings"
   | "support"
   | "earnings"
-  | "verification";
+  | "verification"
+  | "shop"
+  | "orders";
 
 export type NavItem = {
   label: string;

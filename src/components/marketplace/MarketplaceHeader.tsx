@@ -15,8 +15,7 @@ export default function MarketplaceHeader({
   category,
   categories,
 }: Props) {
-  const { cart } = useCart();
-  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const { itemCount } = useCart();
 
   return (
     <header className="sticky top-0 z-30 bg-navy-900 text-white shadow-sm">
@@ -89,7 +88,7 @@ export default function MarketplaceHeader({
             )}
           </Link>
           <Link
-            href="/coming-soon?feature=Sell+on+NaijaCraft"
+            href="/sell"
             className="hidden h-11 items-center rounded-lg bg-brand-amber-500 px-4 text-sm font-bold text-navy-900 transition-colors hover:bg-brand-amber-600 lg:flex"
           >
             Sell on NaijaCraft

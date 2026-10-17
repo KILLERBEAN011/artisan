@@ -44,12 +44,32 @@ const sellerSchema = new Schema(
     // digits and a photo of the ID that only admins can open.
     idType: { type: String, enum: SELLER_ID_TYPES },
     idLast4: { type: String, maxlength: 4 },
-    idDocumentUrl: { type: String, select: false },
+    // Private Cloudinary file (type "private"): only admins can open it, through
+    // a short-lived signed link. Never a public URL.
+    idDocumentPublicId: { type: String, select: false },
+    idDocumentFormat: { type: String, select: false },
+
+    // What they plan to sell (marketplace categories)
+    categories: { type: [String], default: undefined },
+
+    // Where we send their money. Hidden from normal queries.
+    payout: {
+      type: new Schema(
+        {
+          bankName: { type: String, trim: true },
+          accountNumber: { type: String, trim: true },
+          accountName: { type: String, trim: true },
+        },
+        { _id: false },
+      ),
+      select: false,
+    },
 
     acceptedPolicyAt: { type: Date }, // when they agreed to the seller policy
     appliedAt: { type: Date },
     reviewedAt: { type: Date },
     reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    // Shown to the seller when their application is rejected or their shop is suspended
     rejectionReason: { type: String, trim: true },
 
     // Leave empty to use the site-wide commission. Set per seller for deals.
